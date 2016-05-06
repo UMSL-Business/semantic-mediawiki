@@ -1,0 +1,78 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Create autoscaling EC2 groups for Semantic MediaWiki",
+
+  "Parameters" : {
+    "StackName":{
+      "Type": "String",
+      "Description":"All created resources will be tagged with this name."
+    },
+    "ProjectTag":{
+      "Type": "String",
+      "Description":"All created resources will be tagged with this name."
+    },
+    "GroupTag":{
+      "Type": "String",
+      "Description":"All created resources will be tagged with this name."
+    },
+    "EnvironmentTag":{
+      "Type": "String",
+      "Description":"Tag - Monsanto Environment"
+    },
+    "OwnerTag":{
+      "Type": "String",
+      "Description":"Tag - Monsanto product owner"
+    },
+    "ResourcesBucketName" : {
+      "Description" : "The name of the bucket that contains your packaged source",
+      "Type" : "String"
+    },
+    "AMILookupIAMRoleArn" : {
+      "Description" : "The arn for the IAM role used by lambda to lookup the latest Amazon Linux AMI",
+      "Type" : "String"
+    },
+    "ModuleName" : {
+      "Description" : "The name of the JavaScript file for looking up the latest AMI ID",
+      "Type" : "String",
+      "Default" : "amilookup"
+    },
+    "S3Key" : {
+      "Description" : "The name of the ZIP package for looking up the latest AMI ID",
+      "Type" : "String",
+      "Default" : "amilookup.zip"
+    },
+    "DoNotCreate" : {
+      "Description" : "If DoNotCreateStack condition is present (\"Condition\" : \"DoNotCreateStack\") in resource definition, then the resource is not created",
+      "Default" : "true",
+      "Type" : "String"
+    }
+  },
+
+  "Conditions" : {
+    "DoNotCreateStack" : {"Fn::Equals" : [{"Ref" : "DoNotCreate"}, "false"]}
+  },
+
+
+  "Resources" : {
+    "AMIInfoFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ResourcesBucketName" },
+          "S3Key": { "Ref": "S3Key" }
+        },
+        "Handler": { "Fn::Join" : [ "", [{ "Ref": "ModuleName" },".handler"] ] },
+        "Role": {"Ref" : "AMILookupIAMRoleArn"},
+        "Runtime": "nodejs",
+        "Timeout": "30"
+      }
+    }
+  },
+  "Outputs" : {
+    "AMIInfoFunctionArn":{
+			"Description" : "The arn of the lambda function",
+    	"Value" : { "Fn::GetAtt" : ["AMIInfoFunction", "Arn"] }
+		}
+  }
+}

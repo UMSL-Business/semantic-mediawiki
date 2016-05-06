@@ -1,0 +1,84 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates a dedicated bucket to hold cloudformation templates needed to provision the AWS SMW environment and to house the resources (installation files, configuration files) needed for the SMW VPC",
+	"Parameters" : {
+		"StackName":{
+	      "Type": "String",
+	      "Description":"All created resources will be tagged with this name."
+	    },
+	    "ProjectTag":{
+	      "Type": "String",
+	      "Description":"Tag - Project name"
+	    },
+	    "GroupTag":{
+	      "Type": "String",
+	      "Description":"Tag - Group name"
+	    },
+			"EnvironmentTag":{
+	      "Type": "String",
+	      "Description":"Tag - Environment"
+	    },
+	    "OwnerTag":{
+	      "Type": "String",
+	      "Description":"Tag - product owner"
+	    },
+			"CFTemplateBucketName":{
+	    	"Type":"String",
+	    	"Description": "The name of the S3 bucket that holds the cloudformation templates used in nested stacks"
+	    },
+			"ResourcesBucketName":{
+	    	"Type":"String",
+	    	"Description": "The name of the S3 bucket that holds resource files for SMW"
+	    }
+	},
+	"Mappings":{},
+	"Resources" : {
+		"TemplateBucket":{
+			"Type":"AWS::S3::Bucket",
+			"Properties":{
+				"BucketName" : {"Ref" : "CFTemplateBucketName"},
+				"Tags":[{
+		            "Key":"Stack",
+		            "Value": {"Ref": "StackName"}
+		        },{
+		            "Key":"project",
+		            "Value":{"Ref": "ProjectTag"}
+		        },{
+		            "Key":"group",
+		            "Value":{"Ref": "GroupTag"}
+		        },{
+		            "Key":"menvironment",
+		            "Value":{"Ref": "EnvironmentTag"}
+		        },{
+		            "Key":"owner",
+		            "Value":{"Ref": "OwnerTag"}
+		        }
+				]
+      }
+    },
+
+		"ResourcesBucket":{
+			"Type":"AWS::S3::Bucket",
+			"Properties":{
+				"BucketName" : {"Ref" : "ResourcesBucketName"},
+				"Tags":[{
+		            "Key":"Stack",
+		            "Value": {"Ref": "StackName"}
+		        },{
+		            "Key":"project",
+		            "Value":{"Ref": "ProjectTag"}
+		        },{
+		            "Key":"group",
+		            "Value":{"Ref": "GroupTag"}
+		        },{
+		            "Key":"menvironment",
+		            "Value":{"Ref": "EnvironmentTag"}
+		        },{
+		            "Key":"owner",
+		            "Value":{"Ref": "OwnerTag"}
+		        }
+				]
+      }
+    }
+	}
+}

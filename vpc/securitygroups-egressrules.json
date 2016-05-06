@@ -1,0 +1,46 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates all required egress rules for the security groups",
+	"Parameters" : {
+		"StackName":{
+	    "Type": "String",
+	    "Description":"All created resources will be tagged with this name."
+	  },
+	  "SMWSecurityGroup":{
+	  	"Description" : "Security Group for smw in public subnet",
+	  	"Type":"AWS::EC2::SecurityGroup::Id"
+	  }
+	},
+
+	"Mappings":{},
+
+	"Resources" : {
+		"SMWHTTPEgressToInternet":{
+			"Type":"AWS::EC2::SecurityGroupEgress",
+			"Properties":{
+				"CidrIp" : "0.0.0.0/0",
+				"FromPort" : "80",
+				"GroupId" : {"Ref":"SMWSecurityGroup"},
+				"IpProtocol" : "6",
+				"ToPort" : "80"
+			},
+			"Metadata":{
+				"Comment":"Allows outbound http traffic to the Internet for requests and updates"
+			}
+		},
+		"SMWHTTPSEgressToInternet":{
+			"Type":"AWS::EC2::SecurityGroupEgress",
+			"Properties":{
+				"CidrIp" : "0.0.0.0/0",
+				"FromPort" : "443",
+				"GroupId" : {"Ref":"SMWSecurityGroup"},
+				"IpProtocol" : "6",
+				"ToPort" : "443"
+			},
+			"Metadata":{
+				"Comment":"Allows outbound https traffic to the Internet for requests and updates"
+			}
+		}
+	},
+	"Outputs" : {}
+}

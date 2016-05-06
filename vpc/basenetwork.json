@@ -1,0 +1,126 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates the network entities for the environment.",
+	"Parameters" : {
+			"StackName":{
+				"Type": "String",
+				"Description":"All created resources will be tagged with this name."
+			},
+			"ProjectTag":{
+	      "Type": "String",
+	      "Description":"All created resources will be tagged with this name."
+	    },
+	    "GroupTag":{
+	      "Type": "String",
+	      "Description":"All created resources will be tagged with this name."
+	    },
+	    "EnvironmentTag":{
+	      "Type": "String",
+	      "Description":"Tag - Monsanto Environment"
+	    },
+	    "OwnerTag":{
+	      "Type": "String",
+	      "Description":"Tag - Monsanto product owner"
+	    },
+			"VPCCidr":{
+			"Description" : "The CIDR block of the VPC",
+			"Type" : "String"
+			},
+			"DoNotCreate" : {
+	      "Description" : "If DoNotCreateStack condition is present (\"Condition\" : \"DoNotCreateStack\") in resource definition, then the resource is not created",
+	      "Default" : "true",
+	      "Type" : "String"
+			}
+  	},
+  "Mappings":{
+  },
+	"Conditions" : {
+    "DoNotCreateStack" : {"Fn::Equals" : [{"Ref" : "DoNotCreate"}, "false"]}
+  },
+	"Resources" : {
+		"VPC":{
+			"Type" : "AWS::EC2::VPC",
+   		"Properties" : {
+		  	"CidrBlock" : { "Ref" : "VPCCidr" },
+		  	"EnableDnsSupport" : "true",
+		  	"EnableDnsHostnames" : "true",
+      	"Tags":[{
+	      	"Key":"Stack",
+	      	"Value":{"Ref": "StackName"}
+	      	},{
+	      	"Key":"Name",
+	      	"Value":{"Fn::Join":["-",[{"Ref": "StackName"},"VPC"]]}
+	      	},{
+					"Key":"project",
+	        "Value":{"Ref": "ProjectTag"}
+					},{
+					"Key":"group",
+	        "Value":{"Ref": "GroupTag"}
+					},{
+					"Key":"environment",
+					"Value":{"Ref": "EnvironmentTag"}
+					},{
+					"Key":"owner",
+					"Value":{"Ref": "OwnerTag"}
+					}
+				]
+      }
+   	},
+   	"InternetGateway": {
+	  	"Type": "AWS::EC2::InternetGateway",
+	  	"Properties": {
+	    	"Tags": [{
+	      	"Key":"Stack",
+	      	"Value": {"Ref": "StackName"}
+	      	},{
+	      	"Key":"Name",
+	      	"Value":{"Fn::Join":["-",[{"Ref": "StackName"},"InternetGateway"]]}
+	        },{
+					"Key":"project",
+	        "Value":{"Ref": "ProjectTag"}
+					},{
+					"Key":"group",
+	        "Value":{"Ref": "GroupTag"}
+					},{
+					"Key":"environment",
+					"Value":{"Ref": "EnvironmentTag"}
+					},{
+					"Key":"owner",
+					"Value":{"Ref": "OwnerTag"}
+					}
+				]
+	  	}
+	  },
+	  "AttachInternetGateway": {
+	  	"Type": "AWS::EC2::VPCGatewayAttachment",
+	  	"Properties": {
+	    	"VpcId": {"Ref" : "VPC"},
+	    	"InternetGatewayId": { "Ref": "InternetGateway" }
+	  	}
+	  },
+    "SMWEIP": {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "Metadata":{
+        "Comment" : "Create elastic IP to be used with SMW"
+      },
+      "DependsOn" : "AttachInternetGateway"
+    }
+	},
+	"Outputs" : {
+		"VPCID" : {
+      "Description" : "The ID of the VPC created",
+      "Value" : {"Ref" : "VPC"}
+    },
+    "InternetGatewayID":{
+    	"Description":"The ID of the InternetGateway created.",
+    	"Value":{"Ref":"InternetGateway"}
+    },
+		"SMWEIPAllocationID":{
+			"Description":"The ID that AWS assigns to represent the allocation of the address for use with Amazon VPC.",
+			"Value":{"Fn::GetAtt": ["SMWEIP", "AllocationId"]}
+		}
+	}
+}

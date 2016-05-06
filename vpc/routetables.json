@@ -1,0 +1,109 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates all route tables for the SMW infrastructure and associates them with the appropriate subnet.",
+	"Parameters" : {
+		"StackName":{
+			"Type": "String",
+			"Description":"All created resources will be tagged with this name."
+	  },
+		"ProjectTag":{
+			"Type": "String",
+			"Description":"Tag - Monsanto Project name"
+		},
+		"GroupTag":{
+			"Type": "String",
+			"Description":"Tag - Monsanto Group name"
+		},
+		"EnvironmentTag":{
+			"Type": "String",
+			"Description":"Tag - Monsanto Environment"
+		},
+		"OwnerTag":{
+			"Type": "String",
+			"Description":"Tag - Monsanto product owner"
+		},
+		"VPCCidr":{
+	   	"Description" : "The CIDR block of the VPC.",
+	  	"Type": "String"
+	  },
+		"VPCID":{
+	    "Type":"AWS::EC2::VPC::Id",
+	    "Description":"The ID of the VPC the subnets shall be provisioned in."
+	  },
+	  "PublicSubnetId":{
+	  	"Type":"AWS::EC2::Subnet::Id",
+	    "Description":"The ID of the public subnet."
+	  },
+	  "GatewayId":{
+	  	"Type":"String",
+	  	"Description":"The ID of the Internet Gateway."
+	  },
+		"DoNotCreate" : {
+			"Description" : "If DoNotCreateStack condition is present (\"Condition\" : \"DoNotCreateStack\") in resource definition, then the resource is not created",
+			"Default" : "true",
+			"Type" : "String"
+		}
+
+	},
+	"Mappings":{},
+	"Conditions" : {
+    "DoNotCreateStack" : {"Fn::Equals" : [{"Ref" : "DoNotCreate"}, "false"]}
+  },
+	"Resources" : {
+		"PublicRouteTable": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"VpcId": {"Ref" : "VPCID"},
+				"Tags": [{
+					"Key":"Stack",
+					"Value": {"Ref": "StackName"}
+					},{
+	        "Key":"Name",
+	        "Value":{"Fn::Join":["-",[{"Ref": "StackName"},"PublicRouteTable"]]}
+	        },{
+					"Key":"project",
+	        "Value":{"Ref": "ProjectTag"}
+					},{
+					"Key":"group",
+	        "Value":{"Ref": "GroupTag"}
+					},{
+					"Key":"environment",
+					"Value":{"Ref": "EnvironmentTag"}
+					},{
+					"Key":"owner",
+					"Value":{"Ref": "OwnerTag"}
+					}
+				]
+			},
+			"Metadata" :{
+				"Comment" : "This is the route table to control the flow between the public Internet and the VPC."
+			}
+		},
+		"PublicInternetTrafficRoute": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"RouteTableId": {"Ref" : "PublicRouteTable"},
+				"DestinationCidrBlock": "0.0.0.0/0",
+				"GatewayId": {"Ref" : "GatewayId"}
+			},
+			"Metadata" :{
+				"Comment" : "route to internet from VPC"
+			},
+			"DependsOn":"PublicRouteTable"
+		},
+		"PublicRouteTableAssocToPublicSubnet": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"SubnetId": {"Ref" : "PublicSubnetId"},
+				"RouteTableId": {"Ref" : "PublicRouteTable"}
+			},
+			"DependsOn":["PublicInternetTrafficRoute"]
+		}
+	},
+	"Outputs" : {
+		"PublicRouteTableID":{
+			"Description" : "The ID of the public route table",
+      "Value" : {"Ref" : "PublicRouteTable"}
+		}
+	}
+}

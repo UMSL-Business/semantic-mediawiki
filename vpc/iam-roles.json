@@ -1,0 +1,146 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Description" : "This stack creates the needed IAM roles for EC2 to S3 access for semantic mediawiki",
+   "Parameters" : {
+     "StackName":{
+       "Type": "String",
+       "Description":"All created resources will be tagged with this name."
+       },
+       "ProjectTag":{
+         "Type": "String",
+         "Description":"Tag - Monsanto Project name"
+       },
+       "GroupTag":{
+         "Type": "String",
+         "Description":"Tag - Monsanto Group name"
+       },
+       "EnvironmentTag":{
+         "Type": "String",
+         "Description":"Tag - Monsanto Environment"
+       },
+       "OwnerTag":{
+         "Type": "String",
+         "Description":"Tag - Monsanto product owner"
+       },
+ 			 "ResourcesBucketName":{
+ 	    	 "Type":"String",
+ 	    	 "Description": "The name of the S3 bucket that holds resource files for the project"
+ 	     }
+    },
+
+    "Resources": {
+      "LambdaAMILookupExecutionRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": {"Service": ["lambda.amazonaws.com"]},
+                "Action": ["sts:AssumeRole"]
+            }]
+          },
+          "Path": "/",
+          "Policies": [{
+            "PolicyName": "root",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [{
+                  "Effect": "Allow",
+                  "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+                  "Resource": "arn:aws:logs:*:*:*"
+              },
+              {
+                  "Effect": "Allow",
+                  "Action": ["ec2:DescribeImages"],
+                  "Resource": "*"
+              }]
+            }
+          }]
+        }
+      },
+
+      "SMWRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version" : "2012-10-17",
+            "Statement": [ {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "ec2.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole" ]
+            }]
+          },
+          "Path": "/",
+          "Policies": [
+            {
+              "PolicyName": "SMWToS3",
+              "PolicyDocument": {
+                "Version" : "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:ListAllMyBuckets"
+                    ],
+                    "Resource": "arn:aws:s3:::*"
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:ListBucket",
+                        "s3:GetBucketLocation"
+                    ],
+                    "Resource": {"Fn::Join" : ["",["arn:aws:s3:::", {"Ref" : "ResourcesBucketName"}]]}
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:ListBucket",
+                        "s3:GetBucketLocation",
+                        "s3:GetObject"
+                    ],
+                    "Resource": {"Fn::Join" : ["",["arn:aws:s3:::", {"Ref" : "ResourcesBucketName"}, "/smw/*"]]}
+                  }
+                ]
+              }
+            },
+            {
+              "PolicyName": "AssociateElasticIPAddress",
+              "PolicyDocument": {
+                "Version" : "2012-10-17",
+                "Statement": [ {
+                  "Effect": "Allow",
+                  "Action": ["ec2:AssociateAddress"],
+                  "Resource": "*"
+                }]
+              }
+            }
+          ]
+        }
+      },
+
+      "SMWInstanceProfile": {
+        "Type": "AWS::IAM::InstanceProfile",
+        "Properties": {
+          "Path": "/",
+          "Roles": [ {
+            "Ref": "SMWRole"
+          } ]
+        }
+      }
+  },
+
+  "Outputs" : {
+  	"SMWInstanceProfileName":{
+  		"Description" : "The name of the SMW Instance Profile",
+      "Value" : {"Ref" : "SMWInstanceProfile"}
+  	},
+    "LambdaAMILookupExecutionRoleArn":{
+  		"Description" : "The arn of the lambda execution role for the ami lookup",
+      "Value" : { "Fn::GetAtt" : ["LambdaAMILookupExecutionRole", "Arn"] }
+  	}
+	}
+}

@@ -1,0 +1,98 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates all required Security Groups",
+	"Parameters" : {
+		"StackName":{
+	    "Type": "String",
+	    "Description":"All created resources will be tagged with this name."
+	  },
+	  "ProjectTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto Project name"
+	  },
+	  "GroupTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto Group name"
+	  },
+		"EnvironmentTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto Environment"
+	  },
+	  "OwnerTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto product owner"
+	  },
+		"VPCID":{
+			"Type":"AWS::EC2::VPC::Id",
+			"Description":"The ID of the VPC the subnets shall be provisioned in."
+		}
+	},
+
+	"Mappings":{},
+
+	"Resources" : {
+		"SMWSecurityGroup":{
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties":{
+				"GroupDescription" : "The security group that governs the smw instance in the public subnet",
+				"Tags" :  [{
+					"Key":"Stack",
+					"Value": {"Ref": "StackName"}
+					},{
+	        "Key":"Name",
+	        "Value":{"Fn::Join":["-",[{"Ref": "StackName"},"SMWSecurityGroup"]]}
+	        },{
+					"Key":"project",
+	        "Value":{"Ref": "ProjectTag"}
+					},{
+					"Key":"group",
+	        "Value":{"Ref": "GroupTag"}
+					},{
+					"Key":"environment",
+					"Value":{"Ref": "EnvironmentTag"}
+					},{
+					"Key":"owner",
+					"Value":{"Ref": "OwnerTag"}
+					}
+				],
+				"VpcId" : {"Ref":"VPCID"}
+			}
+		},
+
+		"SGIngressRules": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "Parameters": {
+          "StackName": {"Ref": "StackName"},
+          "SMWSecurityGroup":{"Ref":"SMWSecurityGroup"}
+        },
+				"TemplateURL" : {"Fn::Join":["",["https://s3.amazonaws.com/smw-cf-templates-",{"Ref": "EnvironmentTag"}, "/vpc/securitygroups-ingressrules.json"]]}
+      },
+			"DependsOn":["SMWSecurityGroup"],
+      "Metadata":{
+				"Comment" : "creates ingress rules for the security groups"
+			}
+    },
+
+	  "SGEgressRules": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "Parameters": {
+          "StackName": {"Ref": "StackName"},
+          "SMWSecurityGroup":{"Ref":"SMWSecurityGroup"}
+        },
+        "TemplateURL" : {"Fn::Join":["",["https://s3.amazonaws.com/smw-cf-templates-",{"Ref": "EnvironmentTag"}, "/vpc/securitygroups-egressrules.json"]]}
+      },
+			"DependsOn":["SMWSecurityGroup"],
+      "Metadata":{
+				"Comment" : "creates egress rules for the security groups"
+			}
+    }
+	},
+	"Outputs" : {
+		"SMWSecurityGroupID":{
+			"Description" : "The ID of the SMW security group",
+    	"Value" : {"Ref" : "SMWSecurityGroup"}
+		}
+	}
+}

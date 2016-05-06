@@ -1,0 +1,140 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "This stack creates network security controls. Subnet partitions and ACLs",
+	"Parameters" : {
+		"StackName":{
+	    "Type": "String",
+	    "Description":"All created resources will be tagged with this name."
+	  },
+		"ProjectTag":{
+			"Type": "String",
+			"Description":"All created resources will be tagged with this name."
+		},
+		"GroupTag":{
+			"Type": "String",
+			"Description":"All created resources will be tagged with this name."
+		},
+		"EnvironmentTag":{
+			"Type": "String",
+			"Description":"Tag - Monsanto Environment"
+		},
+		"OwnerTag":{
+			"Type": "String",
+			"Description":"Tag - Monsanto product owner"
+		},
+		"VPCCidr":{
+	   	"Description" : "The CIDR block of the VPC.",
+	  	"Type": "String"
+	  },
+		"PublicSubnetCIDR":{
+	  	"Description" : "The CIDR block of the inbound public subnet.",
+	   	"Type": "String"
+	  },
+		"InternetGatewayId":{
+	  	"Type":"String",
+	  	"Description":"The ID of the Internet Gateway."
+	  },
+	  "VPCID":{
+	  	"Type":"AWS::EC2::VPC::Id",
+	  	"Description":"The ID of the VPC the subnets shall be provisioned in."
+	  },
+		"DoNotCreate" : {
+			"Description" : "If DoNotCreateStack condition is present (\"Condition\" : \"DoNotCreateStack\") in resource definition, then the resource is not created",
+			"Default" : "true",
+			"Type" : "String"
+		}
+	},
+	"Mappings":{
+		"RegionAZMapping":{
+			"us-east-1":{
+	    	"a":"us-east-1a",
+		   	"b":"us-east-1b",
+		    "c":"us-east-1d",
+		    "d":"us-east-1e"
+	    }
+	  }
+	},
+	"Conditions" : {
+    "DoNotCreateStack" : {"Fn::Equals" : [{"Ref" : "DoNotCreate"}, "false"]}
+  },
+	"Resources" : {
+	  "PublicSubnet":{
+	   	"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+	  		"AvailabilityZone" : {"Fn::FindInMap": ["RegionAZMapping",{ "Ref" : "AWS::Region" }, "a"] },
+	  		"CidrBlock" : { "Ref" : "PublicSubnetCIDR" },
+	  		"VpcId": {"Ref" : "VPCID"},
+		    "Tags":[{
+		      "Key":"Stack",
+		      "Value": {"Ref": "StackName"}
+		      },{
+	        "Key":"Name",
+	        "Value":{"Fn::Join":["-",[{"Ref": "StackName"},"PublicSubnet"]]}
+	        },{
+					"Key":"project",
+	        "Value":{"Ref": "ProjectTag"}
+					},{
+					"Key":"group",
+	        "Value":{"Ref": "GroupTag"}
+					},{
+					"Key":"environment",
+					"Value":{"Ref": "EnvironmentTag"}
+					},{
+					"Key":"owner",
+					"Value":{"Ref": "OwnerTag"}
+					}
+				]
+	    },
+	    "Metadata":{
+		  	"Comment" : "Houses public instances (ex: smw)"
+		  }
+	  },
+
+		"RouteTables":{
+	  	"Type":"AWS::CloudFormation::Stack",
+			"Properties" :{
+				"Parameters" :{
+					"StackName": {"Ref" : "StackName"},
+					"ProjectTag": {"Ref" : "ProjectTag"},
+					"GroupTag": {"Ref" : "GroupTag"},
+					"EnvironmentTag": {"Ref" : "EnvironmentTag"},
+					"OwnerTag": {"Ref" : "OwnerTag"},
+					"VPCCidr": { "Ref":"VPCCidr" },
+					"VPCID": { "Ref":"VPCID" },
+					"PublicSubnetId": { "Ref":"PublicSubnet" },
+					"GatewayId": {"Ref" : "InternetGatewayId"}
+				},
+			"TemplateURL" : {"Fn::Join":["",["https://s3.amazonaws.com/smw-cf-templates-",{"Ref": "EnvironmentTag"}, "/vpc/routetables.json"]]}
+			},
+			"DependsOn" : ["PublicSubnet"]
+	  },
+
+		"PublicSubnetACL":{
+	  	"Type":"AWS::CloudFormation::Stack",
+			"Properties" :{
+				"Parameters" :{
+					"StackName": {"Ref" : "StackName"},
+					"ProjectTag": {"Ref" : "ProjectTag"},
+					"GroupTag": {"Ref" : "GroupTag"},
+					"EnvironmentTag": {"Ref" : "EnvironmentTag"},
+					"OwnerTag": {"Ref" : "OwnerTag"},
+					"VPCID": { "Ref":"VPCID" },
+					"PublicSubnetId": { "Ref":"PublicSubnet" }
+				},
+			"TemplateURL" : {"Fn::Join":["",["https://s3.amazonaws.com/smw-cf-templates-",{"Ref": "EnvironmentTag"}, "/vpc/publicsubnet-acls.json"]]}
+			},
+			"DependsOn" : "PublicSubnet"
+	  }
+	},
+
+	"Outputs" : {
+		"PublicSubnetId" : {
+  		"Description" : "The ID of the public subnet created.",
+  		"Value" : {"Ref" : "PublicSubnet"}
+    },
+		"PublicRouteTableID":{
+			"Description" : "The ID of the public route table",
+  		"Value" : { "Fn::GetAtt" : [ "RouteTables", "Outputs.PublicRouteTableID" ] }
+		}
+	}
+}

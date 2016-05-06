@@ -1,0 +1,65 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates the VPC endpoints for EC2 to S3 smw-resources-$ENV access",
+	"Parameters" : {
+		"StackName":{
+	    "Type": "String",
+	    "Description":"All created resources will be tagged with this name."
+	  },
+	  "ProjectTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto Project name"
+	  },
+	  "GroupTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto Group name"
+	  },
+		"EnvironmentTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto Environment"
+	  },
+	  "OwnerTag":{
+	    "Type": "String",
+	    "Description":"Tag - Monsanto product owner"
+	  },
+    "VPCID":{
+	  	"Type":"AWS::EC2::VPC::Id",
+	  	"Description":"The ID of the VPC the subnets shall be provisioned in."
+	  },
+		"PublicRouteTableID":{
+	  	"Type":"String",
+	  	"Description":"The ID of the public route table the public subnet is associated with."
+	  },
+		"ResourcesBucketName":{
+			"Type":"String",
+			"Description": "The name of the S3 bucket that holds resource files for conductor"
+		}
+  },
+
+	"Resources" : {
+    "S3Endpoint" : {
+      "Type" : "AWS::EC2::VPCEndpoint",
+      "Properties" : {
+  			"PolicyDocument" : {
+          "Version":"2012-10-17",
+          "Statement":[{
+            "Effect":"Allow",
+            "Principal": "*",
+            "Action":[
+							"s3:GetObject"
+						],
+            "Resource": ["arn:aws:s3:::*"]
+          }]
+        },
+        "RouteTableIds" : [ {"Ref" : "PublicRouteTableID"}],
+        "ServiceName" : { "Fn::Join": [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, ".s3" ] ] },
+        "VpcId" : {"Ref" : "VPCID"}
+      },
+      "Metadata":{
+        "Comment" : "Resource is s3:::* due to yum calls on amazon linux pulling resources from a s3 bucket"
+      }
+    }
+	},
+	"Outputs" : {
+	}
+}

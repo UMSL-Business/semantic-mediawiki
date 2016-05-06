@@ -1,0 +1,48 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Creates all required ingress rules for the security groups",
+	"Parameters" : {
+		"StackName":{
+	    "Type": "String",
+	    "Description":"All created resources will be tagged with this name."
+	  },
+	  "SMWSecurityGroup":{
+	  	"Description" : "Security Group for the jumpbox in public subnet",
+	  	"Type":"AWS::EC2::SecurityGroup::Id"
+	  }
+	},
+
+	"Mappings":{},
+
+	"Resources" : {
+		"SMWSSHIngressFromInternet":{
+			"Type":"AWS::EC2::SecurityGroupIngress",
+			"Properties":{
+				"CidrIp" : "0.0.0.0/0",
+				"FromPort" : "22",
+				"GroupId" : {"Ref":"SMWSecurityGroup"},
+				"IpProtocol" : "6",
+				"ToPort" : "22"
+			},
+			"Metadata":{
+				"Comment":"ssh access for smw; RISK:  need to limit ip range"
+			}
+		},
+
+		"SMWHTTPIngressFromInternet":{
+			"Type":"AWS::EC2::SecurityGroupIngress",
+			"Properties":{
+				"CidrIp" : "0.0.0.0/0",
+				"FromPort" : "80",
+				"GroupId" : {"Ref":"SMWSecurityGroup"},
+				"IpProtocol" : "6",
+				"ToPort" : "80"
+			},
+			"Metadata":{
+				"Comment":"allow access to SMW via port 80 from the Internet"
+			}
+		}
+
+	},
+	"Outputs" : {}
+}
