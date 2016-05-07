@@ -71,7 +71,7 @@ function main() {
   # Update the installed packages and package cache on your instance.
   yum update -y
 
-  associate_EIP_with_instance
+  associate_EIP_with_instance $1
   setup_docker
   setup_smw $2
 }
