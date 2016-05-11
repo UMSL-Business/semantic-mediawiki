@@ -32,10 +32,10 @@ COPY backup.sql /tmp/smw/backup.sql
 # start apache and mysql
 # create database and  restore initial database for mediawiki
 RUN service mysql restart \
-  && mysql -uroot -pUMSL1234! -e "CREATE DATABASE mw126;" \
-  && mysql -uroot -pUMSL1234! -e "CREATE USER mw126@localhost IDENTIFIED by 'CHANGE_THIS';" \
-  && mysql -uroot -pUMSL1234! -e "GRANT ALL ON mw126.* TO mw126@localhost;" \
-  && mysql -u root -pUMSL1234! mw126 < /tmp/smw/backup.sql
+  && mysql -uroot -pCHANGE_THIS -e "CREATE DATABASE mw126;" \
+  && mysql -uroot -pCHANGE_THIS -e "CREATE USER mw126@localhost IDENTIFIED by 'UMSL1234';" \
+  && mysql -uroot -pCHANGE_THIS -e "GRANT ALL ON mw126.* TO mw126@localhost;" \
+  && mysql -u root -pCHANGE_THIS mw126 < /tmp/smw/backup.sql
 
 COPY UMSL_Tritons_Logo.png /var/www/html/mw126/resources/assets/UMSL_Tritons_Logo.png
 
