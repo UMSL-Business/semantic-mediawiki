@@ -35,26 +35,21 @@ function setup_docker() {
 }
 
 # Purpose:
-# download docker jenkins image from S3
-# install and configure jenkins via docker container
+# download resources for install semantic mediawiki
+# install and configure semantic mediawiki via docker container
 #
 # Parameters:
-# $1: S3 bucket for conductor-resources-$ENV
+# $1: S3 bucket for smw-resources-dev
 #
 # Usage:
 # setup_jenkins $S3_BUCKET
 function setup_smw() {
-  echo "wip"
-  # download jenkins docker image from s3
-  ##aws s3 --region $LOCAL_REGION cp s3://$1/jenkins-ci/jenkins-docker.tar /tmp
+  # download resources for install semantic mediawiki
+  aws s3 --region $LOCAL_REGION sync s3://$1/smw /tmp --exclude "bootstrap-smw.sh" --exclude "mediawiki-1.26.2.tar.gz"
 
-  # load jenkins docker image
-  ##docker load < /tmp/jenkins-docker.tar
-
-  # start docker container
-  ##mkdir -p /var/lib/jenkins
-  ##chown -R 1000:1000 /var/lib/jenkins
-  ##docker run --net=host -d -v /var/lib/jenkins:/var/jenkins_home -e JENKINS_OPTS="--prefix=/release" jenkins
+  cd /tmp
+  docker build -t is6891/smw:v1 .
+  
 }
 
 # Parameters:

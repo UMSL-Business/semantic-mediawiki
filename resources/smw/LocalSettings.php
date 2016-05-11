@@ -36,7 +36,7 @@ $wgResourceBasePath = $wgScriptPath;
 
 ## The URL path to the logo.  Make sure you change this from the default,
 ## or else you'll overwrite your logo when you upgrade!
-$wgLogo = "$wgResourceBasePath/resources/assets/wiki.png";
+$wgLogo = "$wgResourceBasePath/resources/assets/UMSL_Tritons_Logo.png";
 
 ## UPO means: this is also a user preference option
 
@@ -55,7 +55,7 @@ $wgDBtype = "mysql";
 $wgDBserver = "localhost";
 $wgDBname = "mw126";
 $wgDBuser = "mw126";
-$wgDBpassword = "changethis";
+$wgDBpassword = "UMSL1234";
 
 # MySQL specific settings
 $wgDBprefix = "";
@@ -69,6 +69,18 @@ $wgDBmysql5 = false;
 ## Shared memory settings
 $wgMainCacheType = CACHE_NONE;
 $wgMemCachedServers = array();
+
+# remove the link to the talk page for non-logged in users
+$wgShowIPinHeader = false;
+
+# require that users log in to edit
+$wgGroupPermissions['*']['edit'] = false;
+
+# Prevent new user registrations except by sysops
+$wgGroupPermissions['*']['createaccount'] = false;
+
+# enable html tags
+$wgRawHtml = true;
 
 ## To enable image uploads, make sure the 'images' directory
 ## is writable, then set this to true:
@@ -98,11 +110,11 @@ $wgShellLocale = "C.UTF-8";
 # Site language code, should be one of the list in ./languages/Names.php
 $wgLanguageCode = "en";
 
-$wgSecretKey = "b30cdef66289b7bf15e664d3a8b067cf1bad2dffb9e5eb07110647f863885c45";
+$wgSecretKey = "4540190ecd807c120595ce83852cf886cc92c730bfdcacd58a06819e54a6a35a";
 
 # Site upgrade key. Must be set to a string (default provided) to turn on the
 # web installer while LocalSettings.php is in place
-$wgUpgradeKey = "703074884acfb0bb";
+$wgUpgradeKey = "9563ff636cb9a202";
 
 ## For attaching licensing metadata to pages, and displaying an
 ## appropriate copyright notice / icon. GNU Free Documentation
@@ -130,3 +142,4 @@ wfLoadSkin( 'Vector' );
 # End of automatically generated settings.
 # Add more configuration options below.
 
+enableSemantics( 'localhost' );

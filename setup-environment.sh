@@ -23,6 +23,10 @@ setup-vpc() {
   log_msg "END:  setup of project VPC resources"
 }
 
+update-resources-bucket() {
+  sh ./resources/upload-bootstrap-files.sh
+}
+
 function main() {
   source settings.sh
   source utilities.sh
@@ -33,7 +37,9 @@ function main() {
 
   if [ "$1" == "preliminaries" ] || [ "$1" == "prelim" ]; then
     setup-preliminaries
+    update-resources-bucket
   elif [ "$1" == "vpc" ]; then
+    update-resources-bucket
     setup-vpc
   elif [ "$1" == "all" ]; then
     setup-preliminaries
